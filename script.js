@@ -109,3 +109,9 @@ function speakLine(text){
 
 // --- Initialize ---
 loadPlaylist();
+
+function stopQuestions(){
+  // Stop any AI session / question mode actions
+  updateMode("Idle");
+  console.log("Question Mode stopped (stub function)");
+}
