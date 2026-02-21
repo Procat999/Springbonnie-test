@@ -1,13 +1,20 @@
 let audioElement = new Audio();
 let showPlaying = false;
-
-// Hardcode your music files here (any filenames, spaces are fine)
-let playlist = [
-  "Music/Hidden in the Sand.ogg",
-];
-
 let songIndex = 0;
+let playlist = [];
 
+// --- Load playlist.json for music ---
+async function loadPlaylist(){
+  try{
+    const resp = await fetch("playlist.json");
+    playlist = await resp.json();
+    console.log("Loaded playlist:", playlist);
+  } catch(e){
+    console.error("Failed to load playlist.json", e);
+  }
+}
+
+// --- Update mode display ---
 function updateMode(text){
   document.getElementById("mode").innerText = "Current Mode: " + text;
 }
@@ -23,7 +30,8 @@ function setIdle(){
 function startShow(){
   stopQuestions();
   showPlaying = true;
-  playNextSong();
+  if(playlist.length === 0) loadPlaylist().then(()=>playNextSong());
+  else playNextSong();
   audioElement.onended = playNextSong;
   updateMode("Show Time");
 }
@@ -98,3 +106,6 @@ function speakLine(text){
   speech.volume = 1;
   window.speechSynthesis.speak(speech);
 }
+
+// --- Initialize ---
+loadPlaylist();
