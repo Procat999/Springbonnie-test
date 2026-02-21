@@ -1,28 +1,15 @@
 let audioElement = new Audio();
 let showPlaying = false;
-let playlist = [];
+
+// Hardcode your music files here (any filenames, spaces are fine)
+let playlist = [
+  "Music/Hidden in the Sand.ogg",
+];
+
 let songIndex = 0;
 
 function updateMode(text){
   document.getElementById("mode").innerText = "Current Mode: " + text;
-}
-
-// Load all audio files from Music folder
-async function loadMusic(){
-  try {
-    const resp = await fetch("Music/");  // Fetch the folder listing
-    const text = await resp.text();
-    // Parse the folder listing for file names (works if GitHub Pages allows directory listing)
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(text, "text/html");
-    const links = Array.from(doc.querySelectorAll("a"));
-    playlist = links
-      .map(a => a.getAttribute("href"))
-      .filter(f => f.match(/\.(mp3|ogg|wav)$/i));
-    console.log("Loaded playlist:", playlist);
-  } catch(e){
-    console.error("Failed to load music:", e);
-  }
 }
 
 // --- Idle Mode ---
@@ -36,12 +23,7 @@ function setIdle(){
 function startShow(){
   stopQuestions();
   showPlaying = true;
-  if(playlist.length === 0) {
-    console.warn("Playlist is empty, loading Music folder...");
-    loadMusic().then(()=>playNextSong());
-  } else {
-    playNextSong();
-  }
+  playNextSong();
   audioElement.onended = playNextSong;
   updateMode("Show Time");
 }
@@ -71,7 +53,7 @@ async function startQuestions(){
     const resp = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": "Bearer sk_db9f3610b4902650afbe9a07950b64cb",
+        "Authorization": "Bearer sk_db9f3610b4902650afbe9a07950c",
         "Content-Type": "application/json"
       },
       body: JSON.stringify(body)
