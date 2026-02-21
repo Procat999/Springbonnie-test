@@ -1,22 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Spring Bonnie Stage Control</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container">
-    <h1>Spring Bonnie Stage Control</h1>
-    <div class="buttons">
-      <button onclick="setIdle()">Idle</button>
-      <button onclick="startShow()">Show Time</button>
-      <button onclick="startQuestions()">Question Mode</button>
-    </div>
-    <div id="mode" class="mode">Current Mode: Idle</div>
-    <div id="chat" class="chat"></div>
+<div class="container">
+  <h1>Spring Bonnie Stage Control</h1>
+  <div class="buttons">
+    <button onclick="setIdle()">Idle</button>
+    <button onclick="startShow()">Show Time</button>
+    <button onclick="startQuestions()">Question Mode</button>
   </div>
+  <div id="mode" class="mode">Current Mode: Idle</div>
+  <div id="chat" class="chat"></div>
 
-  <script src="script.js"></script>
-</body>
-</html>
+  <!-- Embed Smallest.ai widget -->
+  <atoms-widget assistant-id="69990337bd8de6de9e7bd50c"></atoms-widget>
+  <script src="https://unpkg.com/atoms-widget-core@latest/dist/embed/widget.umd.js"></script>
+</div>
