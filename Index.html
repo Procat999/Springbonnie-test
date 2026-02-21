@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Spring Bonnie Control</title>
+
+<style>
+body{
+    background:black;
+    color:#ffd800;
+    font-family:Arial;
+    text-align:center;
+    margin-top:60px;
+}
+button{
+    padding:18px;
+    margin:12px;
+    font-size:20px;
+    background:#222;
+    color:#ffd800;
+    border:2px solid #ffd800;
+    cursor:pointer;
+}
+#mode{
+    margin-top:30px;
+    font-size:24px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Spring Bonnie Stage Control</h1>
+
+<button onclick="setIdle()">Idle</button>
+<button onclick="startShow()">Show Time</button>
+<button onclick="startQuestions()">Question Mode</button>
+
+<div id="mode">Current Mode: Idle</div>
+
+<script>
+let pc = null;
+let audioElement = new Audio();
+let micStream = null;
+
+let playlist = [
+    "music/song1.ogg",
+    "music/song2.ogg",
+    "music/song3.ogg"
+];
+
+let songIndex = 0;
+let showPlaying = false;
+
+function updateMode(text){
+    document.getElementById("mode").innerText="Current Mode: "+text;
+}
+
+/* ---------------- IDLE ---------------- */
+function setIdle(){
+    stopQuestions();
+    stopShow();
+    updateMode("Idle");
+}
+
+/* ---------------- SHOWTIME (MUSIC) ---------------- */
+function playNextSong(){
+    if(!showPlaying) return;
+    audioElement.src = playlist[songIndex];
+    audioElement.play();
+    songIndex = (songIndex+1)%playlist.length;
+}
+
+function startShow(){
+    stopQuestions();
+    showPlaying = true;
+    playNextSong();
+    audioElement.onended = playNextSong;
+    updateMode("Show Time");
+}
+
+function stopShow(){
+    showPlaying=false;
+    audioElement.pause();
+    audioElement.src="";
+}
+
+/* ---------------- QUESTION MODE (AI) ---------------- */
+async function startQuestions(){
+    stopShow();
+    updateMode("Connecting...");
+
+    const token = await fetch("https://YOURBACKENDURL/token");
+    const session = await token.json();
+
+    pc = new RTCPeerConnection();
+
+    pc.ontrack = e=>{
+        audioElement.srcObject=e.streams[0];
+        audioElement.play();
+    };
+
+    micStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    micStream.getTracks().forEach(track=>pc.addTrack(track,micStream));
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    const response = await fetch(session.rtc_url,{
+        method:"POST",
+        body:offer.sdp,
+        headers:{"Content-Type":"application/sdp"}
+    });
+
+    const answer = await response.text();
+    await pc.setRemoteDescription({type:"answer",sdp:answer});
+    updateMode("Question Mode");
+}
+
+function stopQuestions(){
+    if(pc){
+        pc.close();
+        pc=null;
+    }
+    if(micStream){
+        micStream.getTracks().forEach(t=>t.stop());
+        micStream=null;
+    }
+}
+
+/* ---------------- VOICE COMMAND SYSTEM ---------------- */
+let controlMode = false;
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognizer = new SpeechRecognition();
+
+recognizer.continuous = true;
+recognizer.interimResults = false;
+recognizer.lang = "en-US";
+
+recognizer.onresult = (event) => {
+    let last = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+    console.log("Heard:", last);
+
+    if(last.includes("spring bonnie enter control mode")){
+        controlMode = true;
+        speakLine("Control mode activated. I am listening, master.");
+        return;
+    }
+
+    if(last.includes("spring bonnie enter stage mode")){
+        controlMode = false;
+        speakLine("Returning to stage performance.");
+        startShow();
+        return;
+    }
+
+    if(last.includes("spring bonnie sleep") || last.includes("go to sleep spring bonnie")){
+        speakLine("Entering rest mode.");
+        setIdle();
+        return;
+    }
+};
+
+/* Text-to-speech for control responses */
+function speakLine(text){
+    const speech = new SpeechSynthesisUtterance(text);
+    const voices = speechSynthesis.getVoices();
+    speech.voice = voices.find(v => v.name.includes("Microsoft") || v.name.includes("Google"));
+    speech.pitch = 0.55;
+    speech.rate = 0.82;
+    speech.volume = 1;
+    window.speechSynthesis.speak(speech);
+}
+
+recognizer.start();
+
+</script>
+</body>
+</html>
