@@ -3,7 +3,7 @@ let showPlaying = false;
 let songIndex = 0;
 let playlist = [];
 
-// --- Load playlist.json for music ---
+// Load playlist from JSON
 async function loadPlaylist() {
   try {
     const resp = await fetch("playlist.json");
@@ -14,19 +14,19 @@ async function loadPlaylist() {
   }
 }
 
-// --- Update mode display ---
+// Update mode display
 function updateMode(text) {
   document.getElementById("mode").innerText = "Current Mode: " + text;
 }
 
-// --- Idle Mode ---
+// Idle mode
 function setIdle() {
   stopShow();
-  stopQuestions(); // now exists
+  stopQuestions();
   updateMode("Idle");
 }
 
-// --- Show Time ---
+// Show Time mode
 function startShow() {
   stopQuestions();
   stopShow();
@@ -50,39 +50,41 @@ function stopShow() {
   audioElement.src = "";
 }
 
-// --- Question Mode ---
-async function startQuestions() {
+// Simulated Question Mode
+function startQuestions() {
   stopShow();
-  updateMode("Connecting...");
+  updateMode("Question Mode (Simulated)");
+  const chatBox = document.getElementById("chat");
+  chatBox.innerHTML = "";
 
-  const url = "https://atoms.smallest.ai/api/v1/session";
-  const body = { agent_id: "69990337bd8de6de9e7bd50c" };
+  const lines = [
+    "Hello kids! Welcome to the stage!",
+    "I have a surprise for everyone… follow me!",
+    "The lights are dim, but don’t worry, the fun is just beginning!",
+    "Who wants pizza parties and arcade games?",
+    "Remember, the show must go on!"
+  ];
 
-  try {
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer sk_db9f3610b4902650afbe9a07950b64cb",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-    const session = await resp.json();
-    updateMode("Question Mode Connected");
-    console.log("Spring Bonnie session:", session);
-  } catch (e) {
-    console.error("Could not connect:", e);
-    updateMode("Connection Failed");
-  }
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i >= lines.length) clearInterval(interval);
+    else {
+      const p = document.createElement("div");
+      p.textContent = lines[i];
+      chatBox.appendChild(p);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      speakLine(lines[i]);
+      i++;
+    }
+  }, 3000);
 }
 
-// --- Stop Question Mode (stub to prevent errors) ---
+// Stop Question Mode
 function stopQuestions() {
-  // For now, this just stops question mode without any AI cleanup
-  console.log("Question Mode stopped");
+  console.log("Question Mode stopped (simulated)");
 }
 
-// --- Voice commands ---
+// Voice commands
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 const recognizer = new SpeechRecognition();
@@ -102,11 +104,15 @@ recognizer.onresult = (event) => {
   } else if (last.includes("spring bonnie sleep")) {
     speakLine("Entering rest mode.");
     setIdle();
+  } else if (last.includes("spring bonnie question mode")) {
+    speakLine("Entering question mode.");
+    startQuestions();
   }
 };
 
 recognizer.start();
 
+// Text-to-speech
 function speakLine(text) {
   const speech = new SpeechSynthesisUtterance(text);
   const voices = speechSynthesis.getVoices();
@@ -119,5 +125,5 @@ function speakLine(text) {
   window.speechSynthesis.speak(speech);
 }
 
-// --- Initialize ---
+// Initialize
 loadPlaylist();
